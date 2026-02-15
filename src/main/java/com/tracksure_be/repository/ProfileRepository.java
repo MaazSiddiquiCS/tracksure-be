@@ -1,0 +1,15 @@
+package com.tracksure_be.repository;
+
+import com.tracksure_be.entity.Profile;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+@Repository
+
+public interface ProfileRepository extends JpaRepository<Profile, Long> {
+	Optional<Profile> findByUser_UserId(Long userId);
+	Optional<Profile> findByRollNumber(String rollNumber);
+	boolean existsByRollNumber(String rollNumber);
+}
+

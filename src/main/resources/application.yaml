@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: tracksure-be
+  flyway:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tracksure
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000 # Good practice to add a timeout
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        # Crucial for PostGIS support
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+        default_batch_fetch_size: 25
+        order_updates: true
+        order_inserts: true
+        jdbc:
+          batch_size: 50
+    show-sql: true # Turn off for performance; use logging levels instead
+  config:
+    import: "optional:file:.env[.properties]"
+logging:
+  level:
+    org.hibernate.SQL: DEBUG # Only shows SQL when you need to debug
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Shows parameter values
+
+server:
+  port: 8080
