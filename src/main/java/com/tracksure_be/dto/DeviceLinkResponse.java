@@ -8,9 +8,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeviceLinkDTO {
+public class DeviceLinkResponse {
     private Long linkId;
     private PermissionType permissionType;
     private Long followerId;
     private Long targetDeviceId;
 }
+

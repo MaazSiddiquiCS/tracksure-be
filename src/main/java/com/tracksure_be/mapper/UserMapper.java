@@ -1,10 +1,13 @@
 package com.tracksure_be.mapper;
 
-import com.tracksure_be.dto.UserDTO;
+import com.tracksure_be.dto.UserRequest;
+import com.tracksure_be.dto.UserResponse;
 import com.tracksure_be.entity.User;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserDTO toDto(User user);
+    UserResponse toResponse(User user);
+
+    User toEntity(UserRequest request);
 }

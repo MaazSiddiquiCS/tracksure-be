@@ -9,7 +9,7 @@ import java.time.Instant;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeviceDTO {
+public class DeviceResponse {
     private Long deviceId;
     private String peerId;
     private String deviceName;
@@ -17,3 +17,4 @@ public class DeviceDTO {
     private Instant lastSeenAt;
     private Long ownerUserId;
 }
+

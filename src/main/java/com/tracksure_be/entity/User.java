@@ -35,6 +35,9 @@ public class User {
 	@Column(name = "user_id", nullable = false, updatable = false)
 	private Long userId;
 
+    @Column(name = "username", nullable = false, length = 50)
+    private String username;
+
 	@Column(name = "email", nullable = false, length = 320)
 	private String email;
 

@@ -9,8 +9,7 @@ import java.time.Instant;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocationLogDTO {
-    private Long locationId;
+public class LocationLogRequest {
     private Instant recordedAt;
     private Double accuracy;
     private LocationSource source;
@@ -18,3 +17,4 @@ public class LocationLogDTO {
     private Double longitude;
     private Long subjectDeviceId;
 }
+

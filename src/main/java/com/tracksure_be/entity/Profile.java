@@ -1,10 +1,7 @@
 package com.tracksure_be.entity;
 
-import com.tracksure_be.enums.Department;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -45,24 +42,14 @@ public class Profile {
 	@Column(name = "full_name")
 	private String fullName;
 
-	@Column(name = "roll_number")
-	private String rollNumber;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "department")
-	private Department department;
-
-	@Column(name = "batch")
-	private Integer batch;
+	@Column(name = "phone_number")
+	private String phoneNumber;
 
 	@Column(name = "bio")
 	private String bio;
 
 	@Column(name = "profile_pic", columnDefinition = "TEXT")
 	private String profilePic;
-
-	@Column(name = "cover_pic", columnDefinition = "TEXT")
-	private String coverPic;
 
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "user_id", nullable = false)
