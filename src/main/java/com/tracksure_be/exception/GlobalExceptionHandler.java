@@ -133,6 +133,18 @@ public class GlobalExceptionHandler{
         );
         return new ResponseEntity<>(error, error.getStatus());
     }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Username already exists"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotificationNotFound(NotificationNotFoundException ex) {
         Map<String, String> response = new HashMap<>();

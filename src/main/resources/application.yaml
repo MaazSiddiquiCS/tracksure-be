@@ -35,8 +35,7 @@ spring:
   config:
     import: "optional:file:.env[.properties]"
 
--debug: true
-+debug: false
+debug: false
 
 logging:
   level:
@@ -48,6 +47,6 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:changeme-this-secret-must-be-at-least-256-bits-long-in-production}
+    secret: ${JWT_SECRET}
     expiration-ms: 86400000        # 24 hours
     refresh-expiration-ms: 604800000  # 7 days
