@@ -36,3 +36,9 @@ logging:
 
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:changeme-this-secret-must-be-at-least-256-bits-long-in-production}
+    expiration-ms: 86400000        # 24 hours
+    refresh-expiration-ms: 604800000  # 7 days
