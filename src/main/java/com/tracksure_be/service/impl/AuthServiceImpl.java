@@ -1,4 +1,4 @@
-package com.tracksure_be.service.Impl;
+package com.tracksure_be.service.impl;
 
 import com.tracksure_be.dto.LoginRequest;
 import com.tracksure_be.dto.LoginResponse;
@@ -7,6 +7,7 @@ import com.tracksure_be.entity.RefreshToken;
 import com.tracksure_be.entity.User;
 import com.tracksure_be.exception.EmailAlreadyExistsException;
 import com.tracksure_be.exception.InvalidTokenException;
+import com.tracksure_be.exception.UsernameAlreadyExistsException;
 import com.tracksure_be.repository.RefreshTokenRepository;
 import com.tracksure_be.repository.UserRepository;
 import com.tracksure_be.security.JwtProvider;
@@ -21,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -42,12 +45,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse register(SignupRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        // Check both constraints before throwing to avoid partial enumeration
+        boolean emailExists = userRepository.existsByEmail(request.getEmail());
+        boolean usernameExists = userRepository.existsByUsername(request.getUsername());
+
+        if (emailExists) {
             throw new EmailAlreadyExistsException(
                     "An account with email '" + request.getEmail() + "' already exists.");
         }
+        if (usernameExists) {
+            throw new UsernameAlreadyExistsException(
+                    "An account with username '" + request.getUsername() + "' already exists.");
+        }
 
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
+        if (!MessageDigest.isEqual(
+                request.getPassword().getBytes(StandardCharsets.UTF_8),
+                request.getConfirmPassword().getBytes(StandardCharsets.UTF_8))) {
             throw new IllegalArgumentException("Password and confirm password do not match.");
         }
 
@@ -63,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtProvider.generateToken(principal);
         String refreshToken = createRefreshToken(user);
 
-        return buildResponse(accessToken, refreshToken, user);
+        return buildResponse(accessToken, refreshToken, principal);
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
@@ -78,13 +91,13 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        User user = userRepository.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found in database"));
-
+        // Use a JPA reference to avoid an extra DB round-trip; only the ID is needed
+        // for the refresh token relationship.
+        User userRef = userRepository.getReferenceById(principal.getUserId());
         String accessToken = jwtProvider.generateToken(principal);
-        String refreshToken = createRefreshToken(user);
+        String refreshToken = createRefreshToken(userRef);
 
-        return buildResponse(accessToken, refreshToken, user);
+        return buildResponse(accessToken, refreshToken, principal);
     }
 
     // ── Refresh ───────────────────────────────────────────────────────────────
@@ -114,7 +127,7 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(stored);
         String newRefreshToken = createRefreshToken(user);
 
-        return buildResponse(newAccessToken, newRefreshToken, user);
+        return buildResponse(newAccessToken, newRefreshToken, principal);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -141,12 +154,12 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.save(refreshToken).getToken();
     }
 
-    private LoginResponse buildResponse(String accessToken, String refreshToken, User user) {
+    private LoginResponse buildResponse(String accessToken, String refreshToken, UserPrincipal principal) {
         return new LoginResponse(
                 accessToken,
                 refreshToken,
-                user.getUserId(),
-                user.getUsername(),
-                user.getEmail());
+                principal.getUserId(),
+                principal.getUsername(),
+                principal.getEmail());
     }
 }
