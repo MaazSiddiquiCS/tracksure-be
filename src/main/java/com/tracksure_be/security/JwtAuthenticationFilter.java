@@ -22,7 +22,6 @@ import java.io.IOException;
  * the JWT Bearer token, and populates the {@link SecurityContextHolder}.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
