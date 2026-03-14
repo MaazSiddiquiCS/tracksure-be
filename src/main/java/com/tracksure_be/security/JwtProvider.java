@@ -37,10 +37,6 @@ public class JwtProvider {
         return buildToken(userDetails.getUsername(), expirationMs);
     }
 
-    public String generateToken(String username) {
-        return buildToken(username, expirationMs);
-    }
-
     private String buildToken(String subject, long ttlMs) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ttlMs);
@@ -81,16 +77,6 @@ public class JwtProvider {
         try {
             String username = extractUsername(token);
             return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (JwtException | IllegalArgumentException e) {
-            log.debug("JWT validation failed: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean isTokenValid(String token) {
-        try {
-            extractAllClaims(token);
-            return !isTokenExpired(token);
         } catch (JwtException | IllegalArgumentException e) {
             log.debug("JWT validation failed: {}", e.getMessage());
             return false;

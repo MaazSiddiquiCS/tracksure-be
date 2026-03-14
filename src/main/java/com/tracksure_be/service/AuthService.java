@@ -22,7 +22,9 @@ public interface AuthService {
     LoginResponse refresh(String refreshToken);
 
     /**
-     * Revokes all refresh tokens for the authenticated user (logout).
+     * Revokes the provided refresh token (logout from current session).
+     * To revoke all tokens for a user (logout from all devices), use
+     * {@link com.tracksure_be.repository.RefreshTokenRepository#revokeAllByUser}.
      */
     void logout(String refreshToken);
 }

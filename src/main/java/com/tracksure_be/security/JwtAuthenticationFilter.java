@@ -40,8 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (StringUtils.hasText(token) && jwtProvider.isTokenValid(token)) {
-            String username = jwtProvider.extractUsername(token);
+        if (StringUtils.hasText(token)) {
+            String username = null;
+            try {
+                username = jwtProvider.extractUsername(token);
+            } catch (Exception e) {
+                log.debug("Could not extract username from JWT: {}", e.getMessage());
+            }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
