@@ -4,6 +4,10 @@ import com.tracksure_be.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -129,6 +133,18 @@ public class GlobalExceptionHandler{
         );
         return new ResponseEntity<>(error, error.getStatus());
     }
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Username already exists"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotificationNotFound(NotificationNotFoundException ex) {
         Map<String, String> response = new HashMap<>();
@@ -140,12 +156,72 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiError> handleInvalidTokenException(InvalidTokenException ex, HttpServletRequest request) {
         ApiError error = new ApiError(
-                HttpStatus.NOT_FOUND,
+                HttpStatus.UNAUTHORIZED,
                 ex.getMessage(),
                 LocalDateTime.now(),
                 request.getRequestURI(),
-                "The requested post does not exist"
+                "Invalid or expired token"
         );
         return new ResponseEntity<>(error, error.getStatus());
     }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid username or password.",
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Authentication failed"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
     }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiError> handleUsernameNotFound(UsernameNotFoundException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid username or password.",
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Authentication failed"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiError> handleDisabledException(DisabledException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                "Account is disabled.",
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Authentication failed"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiError> handleLockedException(LockedException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.UNAUTHORIZED,
+                "Account is locked.",
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Authentication failed"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Invalid request argument"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+}

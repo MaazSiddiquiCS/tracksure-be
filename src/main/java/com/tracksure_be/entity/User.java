@@ -21,7 +21,8 @@ import java.time.Instant;
 @Table(
 		name = "users",
 		uniqueConstraints = {
-				@UniqueConstraint(name = "uk_users_email", columnNames = "email")
+				@UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+				@UniqueConstraint(name = "uk_users_username", columnNames = "username")
 		}
 )
 @Getter

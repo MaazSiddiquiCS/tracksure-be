@@ -1,4 +1,9 @@
 spring:
+  devtools:
+    livereload:
+      enabled: false
+    restart:
+      enabled: false
   application:
     name: tracksure-be
   flyway:
@@ -29,6 +34,9 @@ spring:
     show-sql: true # Turn off for performance; use logging levels instead
   config:
     import: "optional:file:.env[.properties]"
+
+debug: false
+
 logging:
   level:
     org.hibernate.SQL: DEBUG # Only shows SQL when you need to debug
@@ -36,3 +44,9 @@ logging:
 
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000        # 24 hours
+    refresh-expiration-ms: 604800000  # 7 days
