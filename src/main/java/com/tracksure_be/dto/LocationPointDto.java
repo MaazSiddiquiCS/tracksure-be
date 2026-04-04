@@ -33,7 +33,7 @@ public class LocationPointDto {
 	@DecimalMax(value = "180.0", message = "lon must be <= 180")
 	private Double lon;
 
-	/** GPS accuracy in metres (optional). */
+	/** GPS accuracy in meters (optional). */
 	private Double accuracy;
 
 	@NotNull(message = "recordedAt must not be null")

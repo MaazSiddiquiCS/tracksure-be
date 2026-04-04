@@ -37,7 +37,7 @@ import java.time.Instant;
 				@Index(name = "idx_location_logs_recorded_at", columnList = "recorded_at"),
 				@Index(name = "idx_location_logs_subject_device_id", columnList = "subject_device_id"),
 				@Index(name = "idx_location_logs_uploader_device_id", columnList = "uploader_device_id"),
-				@Index(name = "idx_location_logs_subject_recorded_at", columnList = "subject_device_id, recorded_at DESC")
+				@Index(name = "idx_location_logs_subject_recorded_at", columnList = "subject_device_id, recorded_at")
 		}
 )
 @Getter
