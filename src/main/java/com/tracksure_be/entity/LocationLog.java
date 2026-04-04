@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,10 +27,17 @@ import java.time.Instant;
 @Entity
 @Table(
 		name = "location_logs",
+		uniqueConstraints = {
+				@UniqueConstraint(
+						name = "uk_location_logs_idempotency",
+						columnNames = {"subject_device_id", "uploader_device_id", "client_point_id"}
+				)
+		},
 		indexes = {
 				@Index(name = "idx_location_logs_recorded_at", columnList = "recorded_at"),
 				@Index(name = "idx_location_logs_subject_device_id", columnList = "subject_device_id"),
-				@Index(name = "idx_location_logs_uploader_device_id", columnList = "uploader_device_id")
+				@Index(name = "idx_location_logs_uploader_device_id", columnList = "uploader_device_id"),
+				@Index(name = "idx_location_logs_subject_recorded_at", columnList = "subject_device_id, recorded_at")
 		}
 )
 @Getter
@@ -62,6 +70,14 @@ public class LocationLog {
 	 */
 	@Column(name = "location", nullable = false, columnDefinition = "geometry(Point,4326)")
 	private Point location;
+
+	/**
+	 * Client-assigned identifier for idempotency.
+	 * Combined with subject_device_id and uploader_device_id to form a unique constraint,
+	 * preventing duplicate inserts on offline/retry uploads.
+	 */
+	@Column(name = "client_point_id", length = 255)
+	private String clientPointId;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "subject_device_id", nullable = false)
