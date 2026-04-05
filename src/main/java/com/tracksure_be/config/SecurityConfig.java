@@ -36,7 +36,6 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {
             "/api/auth/**",
-            "/v1/locations:batch",
             "/v1/location-logs",
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",

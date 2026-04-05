@@ -31,13 +31,18 @@ import java.time.Instant;
 				@UniqueConstraint(
 						name = "uk_location_logs_idempotency",
 						columnNames = {"subject_device_id", "uploader_device_id", "client_point_id"}
+				),
+				@UniqueConstraint(
+						name = "uk_location_logs_subject_dedup_key",
+						columnNames = {"subject_device_id", "dedup_key"}
 				)
 		},
 		indexes = {
 				@Index(name = "idx_location_logs_recorded_at", columnList = "recorded_at"),
 				@Index(name = "idx_location_logs_subject_device_id", columnList = "subject_device_id"),
 				@Index(name = "idx_location_logs_uploader_device_id", columnList = "uploader_device_id"),
-				@Index(name = "idx_location_logs_subject_recorded_at", columnList = "subject_device_id, recorded_at")
+				@Index(name = "idx_location_logs_subject_recorded_at", columnList = "subject_device_id, recorded_at"),
+				@Index(name = "idx_location_logs_subject_dedup_key", columnList = "subject_device_id, dedup_key")
 		}
 )
 @Getter
@@ -78,6 +83,13 @@ public class LocationLog {
 	 */
 	@Column(name = "client_point_id", length = 255)
 	private String clientPointId;
+
+	/**
+	 * Deterministic hash used for point-level deduplication.
+	 * Derived from subjectDeviceId + recordedAt + lat + lon + source.
+	 */
+	@Column(name = "dedup_key", length = 64)
+	private String dedupKey;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "subject_device_id", nullable = false)

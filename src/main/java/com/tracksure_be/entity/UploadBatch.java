@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,12 @@ import java.time.Instant;
 @Entity
 @Table(
 		name = "upload_batches",
+		uniqueConstraints = {
+				@UniqueConstraint(
+						name = "uk_upload_batches_uploader_client_uuid",
+						columnNames = {"uploader_device_id", "client_batch_uuid"}
+				)
+		},
 		indexes = {
 				@Index(name = "idx_upload_batches_uploader_device_id", columnList = "uploader_device_id"),
 				@Index(name = "idx_upload_batches_client_batch_uuid", columnList = "client_batch_uuid")

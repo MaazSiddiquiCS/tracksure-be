@@ -5,6 +5,8 @@ import com.tracksure_be.dto.LocationBatchUploadResponse;
 import com.tracksure_be.dto.LocationPointDto;
 import com.tracksure_be.entity.Device;
 import com.tracksure_be.entity.LocationLog;
+import com.tracksure_be.entity.User;
+import com.tracksure_be.repository.DeviceLinkRepository;
 import com.tracksure_be.enums.LocationSource;
 import com.tracksure_be.repository.DeviceRepository;
 import com.tracksure_be.repository.LocationLogRepository;
@@ -35,12 +37,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class LocationBatchServiceImplTest {
+	private static final Long AUTH_USER_ID = 10L;
 
 	@Mock
 	private LocationLogRepository locationLogRepository;
 
 	@Mock
 	private DeviceRepository deviceRepository;
+
+	@Mock
+	private DeviceLinkRepository deviceLinkRepository;
 
 	@InjectMocks
 	private LocationBatchServiceImpl service;
@@ -50,14 +56,19 @@ class LocationBatchServiceImplTest {
 
 	@BeforeEach
 	void setUp() {
+		User uploaderOwner = new User();
+		uploaderOwner.setUserId(AUTH_USER_ID);
+
 		subjectDevice = new Device();
 		subjectDevice.setDeviceId(1L);
+		subjectDevice.setOwnerUser(uploaderOwner);
 
 		uploaderDevice = new Device();
 		uploaderDevice.setDeviceId(2L);
+		uploaderDevice.setOwnerUser(uploaderOwner);
 
 		when(deviceRepository.findById(1L)).thenReturn(Optional.of(subjectDevice));
-		when(deviceRepository.findById(2L)).thenReturn(Optional.of(uploaderDevice));
+		when(deviceRepository.findAllByOwnerUser_UserId(AUTH_USER_ID)).thenReturn(List.of(uploaderDevice));
 	}
 
 	@Test
@@ -69,7 +80,7 @@ class LocationBatchServiceImplTest {
 		LocationBatchUploadRequest request = buildRequest(
 				List.of(point("cp-1", 51.5, -0.1), point("cp-2", 51.6, -0.2)));
 
-		LocationBatchUploadResponse response = service.uploadBatch(request);
+		LocationBatchUploadResponse response = service.uploadBatch(request, AUTH_USER_ID);
 
 		assertThat(response.getTotalReceived()).isEqualTo(2);
 		assertThat(response.getInserted()).isEqualTo(2);
@@ -93,7 +104,7 @@ class LocationBatchServiceImplTest {
 		LocationBatchUploadRequest request = buildRequest(
 				List.of(point("cp-1", 51.5, -0.1), point("cp-2", 51.6, -0.2)));
 
-		LocationBatchUploadResponse response = service.uploadBatch(request);
+		LocationBatchUploadResponse response = service.uploadBatch(request, AUTH_USER_ID);
 
 		assertThat(response.getTotalReceived()).isEqualTo(2);
 		assertThat(response.getInserted()).isEqualTo(1);
@@ -109,7 +120,7 @@ class LocationBatchServiceImplTest {
 		LocationBatchUploadRequest request = buildRequest(
 				List.of(point("cp-1", 51.5, -0.1), point("cp-1", 51.5, -0.1)));
 
-		LocationBatchUploadResponse response = service.uploadBatch(request);
+		LocationBatchUploadResponse response = service.uploadBatch(request, AUTH_USER_ID);
 
 		assertThat(response.getTotalReceived()).isEqualTo(2);
 		assertThat(response.getInserted()).isEqualTo(1);
@@ -125,7 +136,7 @@ class LocationBatchServiceImplTest {
 		LocationBatchUploadRequest request = buildRequest(
 				List.of(point("cp-1", 51.5, -0.1), point("cp-2", 51.6, -0.2)));
 
-		LocationBatchUploadResponse response = service.uploadBatch(request);
+		LocationBatchUploadResponse response = service.uploadBatch(request, AUTH_USER_ID);
 
 		assertThat(response.getInserted()).isEqualTo(0);
 		assertThat(response.getDuplicates()).isEqualTo(2);
@@ -136,9 +147,9 @@ class LocationBatchServiceImplTest {
 		when(deviceRepository.findById(99L)).thenReturn(Optional.empty());
 
 		LocationBatchUploadRequest request = new LocationBatchUploadRequest(
-				99L, 2L, List.of(point("cp-1", 51.5, -0.1)));
+				"99L", 2L, List.of(point("cp-1", 51.5, -0.1)));
 
-		assertThatThrownBy(() -> service.uploadBatch(request))
+		assertThatThrownBy(() -> service.uploadBatch(request, AUTH_USER_ID))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Subject device not found");
 
@@ -146,15 +157,15 @@ class LocationBatchServiceImplTest {
 	}
 
 	@Test
-	void uploadBatch_throwsWhenUploaderDeviceNotFound() {
-		when(deviceRepository.findById(99L)).thenReturn(Optional.empty());
+	void uploadBatch_throwsWhenAuthenticatedUserHasNoDevice() {
+		when(deviceRepository.findAllByOwnerUser_UserId(AUTH_USER_ID)).thenReturn(List.of());
 
 		LocationBatchUploadRequest request = new LocationBatchUploadRequest(
-				1L, 99L, List.of(point("cp-1", 51.5, -0.1)));
+				"1L", 2L, List.of(point("cp-1", 51.5, -0.1)));
 
-		assertThatThrownBy(() -> service.uploadBatch(request))
+		assertThatThrownBy(() -> service.uploadBatch(request, AUTH_USER_ID))
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("Uploader device not found");
+				.hasMessageContaining("No device linked to authenticated user");
 
 		verify(locationLogRepository, never()).saveAll(any());
 	}
@@ -168,7 +179,7 @@ class LocationBatchServiceImplTest {
 		LocationBatchUploadRequest request = buildRequest(
 				List.of(point("cp-1", 48.8566, 2.3522)));  // Paris
 
-		service.uploadBatch(request);
+		service.uploadBatch(request, AUTH_USER_ID);
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<List<LocationLog>> captor = ArgumentCaptor.forClass(List.class);
@@ -182,10 +193,66 @@ class LocationBatchServiceImplTest {
 		assertThat(log.getLocation().getY()).isEqualTo(48.8566);
 	}
 
+	@Test
+	void uploadBatch_throwsWhenSubjectDeviceIdIsSentinel() {
+		LocationBatchUploadRequest request = new LocationBatchUploadRequest(
+				"9_007_199_254_740_991L", 2L, List.of(point("cp-1", 51.5, -0.1)));
+
+		assertThatThrownBy(() -> service.uploadBatch(request, AUTH_USER_ID))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Invalid subjectDeviceId sentinel value");
+
+		verify(locationLogRepository, never()).saveAll(any());
+	}
+
+	@Test
+	void uploadBatch_throwsWhenClientSpoofsUploaderDeviceId() {
+		LocationBatchUploadRequest request = new LocationBatchUploadRequest(
+				"1L", 999L, List.of(point("cp-1", 51.5, -0.1)));
+
+		assertThatThrownBy(() -> service.uploadBatch(request, AUTH_USER_ID))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("uploaderDeviceId spoof detected");
+
+		verify(locationLogRepository, never()).saveAll(any());
+	}
+
+	@Test
+	void uploadBatch_allowsLinkedSubjectDevice() {
+		User anotherOwner = new User();
+		anotherOwner.setUserId(999L);
+		subjectDevice.setOwnerUser(anotherOwner);
+
+		when(deviceLinkRepository.existsByFollowerUser_UserIdAndTargetDevice_DeviceId(AUTH_USER_ID, 1L))
+				.thenReturn(true);
+		when(locationLogRepository.findClientPointIdsBySubjectAndUploader(1L, 2L)).thenReturn(Set.of());
+		when(locationLogRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+		LocationBatchUploadResponse response = service.uploadBatch(buildRequest(List.of(point("cp-1", 1.0, 1.0))), AUTH_USER_ID);
+		assertThat(response.getInserted()).isEqualTo(1);
+	}
+
+	@Test
+	void uploadBatch_rejectsUnlinkedSubjectDevice() {
+		User anotherOwner = new User();
+		anotherOwner.setUserId(999L);
+		subjectDevice.setOwnerUser(anotherOwner);
+
+		when(deviceLinkRepository.existsByFollowerUser_UserIdAndTargetDevice_DeviceId(AUTH_USER_ID, 1L))
+				.thenReturn(false);
+
+		assertThatThrownBy(() -> service.uploadBatch(buildRequest(List.of(point("cp-1", 1.0, 1.0))), AUTH_USER_ID))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("not linked to authenticated user");
+
+		verify(locationLogRepository, never()).saveAll(any());
+
+	}
+
 	// ── helpers ──────────────────────────────────────────────────────────────
 
 	private LocationBatchUploadRequest buildRequest(List<LocationPointDto> points) {
-		return new LocationBatchUploadRequest(1L, 2L, points);
+		return new LocationBatchUploadRequest("1L", 2L, points);
 	}
 
 	private LocationPointDto point(String clientPointId, double lat, double lon) {

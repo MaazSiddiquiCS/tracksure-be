@@ -37,5 +37,13 @@ public interface LocationLogRepository extends JpaRepository<LocationLog, Long> 
 			@Param("subjectDeviceId") Long subjectDeviceId,
 			@Param("uploaderDeviceId") Long uploaderDeviceId
 	);
+
+	@Query("SELECT l.dedupKey FROM LocationLog l " +
+			"WHERE l.subjectDevice.deviceId = :subjectDeviceId " +
+			"AND l.dedupKey IN :dedupKeys")
+	Set<String> findDedupKeysBySubjectAndDedupKeyIn(
+			@Param("subjectDeviceId") Long subjectDeviceId,
+			@Param("dedupKeys") Set<String> dedupKeys
+	);
 }
 
