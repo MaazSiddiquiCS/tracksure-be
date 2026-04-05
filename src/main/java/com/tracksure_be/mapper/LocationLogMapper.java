@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface LocationLogMapper {
 
     @Mapping(source = "subjectDevice.deviceId", target = "subjectDeviceId")
+    @Mapping(source = "uploaderDevice.deviceId", target = "uploaderDeviceId")
     @Mapping(target = "latitude", expression = "java(log.getLocation() != null ? log.getLocation().getY() : null)")
     @Mapping(target = "longitude", expression = "java(log.getLocation() != null ? log.getLocation().getX() : null)")
     LocationLogResponse toResponse(LocationLog log);
