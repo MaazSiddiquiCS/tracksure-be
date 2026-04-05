@@ -44,9 +44,12 @@ logging:
 
 server:
   port: 8080
+  address: 0.0.0.0
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    # Use env var if present; otherwise fall back to a deterministic dev-only secret.
+    # IMPORTANT: set JWT_SECRET in real environments.
+    secret: ${JWT_SECRET:DEV_ONLY_CHANGE_ME_DEV_ONLY_CHANGE_ME_DEV_ONLY_CHANGE_ME}
     expiration-ms: 86400000        # 24 hours
     refresh-expiration-ms: 604800000  # 7 days
