@@ -1,0 +1,78 @@
+package com.tracksure_be.entity;
+
+import com.tracksure_be.enums.LocationSource;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.locationtech.jts.geom.Point;
+
+import java.time.Instant;
+
+@Entity
+@Table(
+        name = "locations",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_locations_subject_device_id", columnNames = "subject_device_id")
+        },
+        indexes = {
+                @Index(name = "idx_locations_subject_device_id", columnList = "subject_device_id"),
+                @Index(name = "idx_locations_recorded_at", columnList = "recorded_at")
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+public class Location {
+
+    @Id
+        @Column(name = "location_pk", nullable = false, updatable = false)
+        private Long locationPk;
+
+        @Column(name = "location_id", nullable = false)
+    private Long locationId;
+
+    @Column(name = "recorded_at", nullable = false)
+    private Instant recordedAt;
+
+    @Column(name = "received_at", nullable = false)
+    private Instant receivedAt;
+
+    @Column(name = "accuracy")
+    private Double accuracy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false)
+    private LocationSource source;
+
+        @Column(name = "updated_at", nullable = false)
+        private Instant updatedAt;
+
+        @Column(name = "last_location_log_id")
+        private Long lastLocationLogId;
+
+    @Column(name = "location", nullable = false, columnDefinition = "geometry(Point,4326)")
+    private Point location;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "subject_device_id", nullable = false)
+    private Device subjectDevice;
+
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "owner_user_id", nullable = false)
+        private User ownerUser;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "uploader_device_id", nullable = false)
+    private Device uploaderDevice;
+}

@@ -13,6 +13,10 @@ import java.util.Set;
 @Repository
 public interface LocationLogRepository extends JpaRepository<LocationLog, Long> {
 
+	List<LocationLog> findAllBySubjectDevice_DeviceIdOrderByRecordedAtDesc(Long subjectDeviceId);
+
+	List<LocationLog> findAllBySubjectDevice_OwnerUser_UserIdOrderByRecordedAtDesc(Long ownerUserId);
+
 	List<LocationLog> findAllBySubjectDevice_DeviceIdAndRecordedAtBetweenOrderByRecordedAtAsc(
 			Long subjectDeviceId,
 			Instant from,

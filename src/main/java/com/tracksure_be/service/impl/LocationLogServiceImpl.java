@@ -1,7 +1,10 @@
 package com.tracksure_be.service.impl;
 
 import com.tracksure_be.dto.LocationLogResponse;
+import com.tracksure_be.entity.Device;
 import com.tracksure_be.mapper.LocationLogMapper;
+import com.tracksure_be.repository.DeviceLinkRepository;
+import com.tracksure_be.repository.DeviceRepository;
 import com.tracksure_be.repository.LocationLogRepository;
 import com.tracksure_be.service.LocationLogService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,8 @@ public class LocationLogServiceImpl implements LocationLogService {
 
 	private final LocationLogRepository locationLogRepository;
 	private final LocationLogMapper locationLogMapper;
+	private final DeviceRepository deviceRepository;
+	private final DeviceLinkRepository deviceLinkRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -23,6 +28,56 @@ public class LocationLogServiceImpl implements LocationLogService {
 		return locationLogRepository.findAll().stream()
 				.map(locationLogMapper::toResponse)
 				.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<LocationLogResponse> getByDeviceId(Long deviceId, Long requesterUserId) {
+		requireRequester(requesterUserId);
+		if (deviceId == null) {
+			throw new IllegalArgumentException("deviceId is required.");
+		}
+		enforceDeviceAccess(deviceId, requesterUserId);
+
+		return locationLogRepository.findAllBySubjectDevice_DeviceIdOrderByRecordedAtDesc(deviceId).stream()
+				.map(locationLogMapper::toResponse)
+				.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<LocationLogResponse> getByUserId(Long userId, Long requesterUserId) {
+		requireRequester(requesterUserId);
+		if (userId == null) {
+			throw new IllegalArgumentException("userId is required.");
+		}
+		if (!userId.equals(requesterUserId)) {
+			throw new IllegalArgumentException("Access denied: userId must match authenticated user.");
+		}
+
+		return locationLogRepository.findAllBySubjectDevice_OwnerUser_UserIdOrderByRecordedAtDesc(userId).stream()
+				.map(locationLogMapper::toResponse)
+				.toList();
+	}
+
+	private void requireRequester(Long requesterUserId) {
+		if (requesterUserId == null) {
+			throw new IllegalArgumentException("Authenticated user id is required.");
+		}
+	}
+
+	private void enforceDeviceAccess(Long deviceId, Long requesterUserId) {
+		Device device = deviceRepository.findById(deviceId)
+				.orElseThrow(() -> new IllegalArgumentException("Device not found for id: " + deviceId));
+		Long ownerUserId = device.getOwnerUser() != null ? device.getOwnerUser().getUserId() : null;
+		if (ownerUserId != null && ownerUserId.equals(requesterUserId)) {
+			return;
+		}
+
+		boolean linked = deviceLinkRepository.existsByFollowerUser_UserIdAndTargetDevice_DeviceId(requesterUserId, deviceId);
+		if (!linked) {
+			throw new IllegalArgumentException("Access denied: device is not owned by or linked to authenticated user.");
+		}
 	}
 }
 
