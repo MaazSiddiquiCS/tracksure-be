@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface UploadBatchRepository extends JpaRepository<UploadBatch, Long> {
 	Optional<UploadBatch> findByClientBatchUuid(String clientBatchUuid);
+	Optional<UploadBatch> findByUploaderDevice_DeviceIdAndClientBatchUuid(Long uploaderDeviceId, String clientBatchUuid);
+	boolean existsByUploaderDevice_DeviceIdAndClientBatchUuid(Long uploaderDeviceId, String clientBatchUuid);
 	List<UploadBatch> findAllByUploaderDevice_DeviceId(Long uploaderDeviceId);
 }
 

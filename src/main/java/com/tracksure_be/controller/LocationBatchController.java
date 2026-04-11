@@ -2,12 +2,14 @@ package com.tracksure_be.controller;
 
 import com.tracksure_be.dto.LocationBatchUploadRequest;
 import com.tracksure_be.dto.LocationBatchUploadResponse;
+import com.tracksure_be.security.UserPrincipal;
 import com.tracksure_be.service.LocationBatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +37,11 @@ public class LocationBatchController {
 					"Duplicate points (identified by clientPointId) are silently skipped."
 	)
 	public ResponseEntity<LocationBatchUploadResponse> uploadBatch(
-			@Valid @RequestBody LocationBatchUploadRequest request) {
-		return ResponseEntity.ok(locationBatchService.uploadBatch(request));
+			@Valid @RequestBody LocationBatchUploadRequest request,
+			@AuthenticationPrincipal UserPrincipal principal) {
+		if (principal == null || principal.getUserId() == null) {
+			throw new IllegalArgumentException("Authenticated principal is required.");
+		}
+		return ResponseEntity.ok(locationBatchService.uploadBatch(request, principal.getUserId()));
 	}
 }

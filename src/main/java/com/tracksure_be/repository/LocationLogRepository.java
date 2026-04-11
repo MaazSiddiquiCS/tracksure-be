@@ -13,6 +13,10 @@ import java.util.Set;
 @Repository
 public interface LocationLogRepository extends JpaRepository<LocationLog, Long> {
 
+	List<LocationLog> findAllBySubjectDevice_DeviceIdOrderByRecordedAtDesc(Long subjectDeviceId);
+
+	List<LocationLog> findAllBySubjectDevice_OwnerUser_UserIdOrderByRecordedAtDesc(Long ownerUserId);
+
 	List<LocationLog> findAllBySubjectDevice_DeviceIdAndRecordedAtBetweenOrderByRecordedAtAsc(
 			Long subjectDeviceId,
 			Instant from,
@@ -36,6 +40,14 @@ public interface LocationLogRepository extends JpaRepository<LocationLog, Long> 
 	Set<String> findClientPointIdsBySubjectAndUploader(
 			@Param("subjectDeviceId") Long subjectDeviceId,
 			@Param("uploaderDeviceId") Long uploaderDeviceId
+	);
+
+	@Query("SELECT l.dedupKey FROM LocationLog l " +
+			"WHERE l.subjectDevice.deviceId = :subjectDeviceId " +
+			"AND l.dedupKey IN :dedupKeys")
+	Set<String> findDedupKeysBySubjectAndDedupKeyIn(
+			@Param("subjectDeviceId") Long subjectDeviceId,
+			@Param("dedupKeys") Set<String> dedupKeys
 	);
 }
 
