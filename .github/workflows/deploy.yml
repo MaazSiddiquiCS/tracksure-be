@@ -2,13 +2,11 @@ name: Build and Deploy to ECR/EC2
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ dev ] # Ensure your branch name is actually 'dev'
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 
@@ -52,13 +50,21 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # These pass your GitHub Secrets into the SSH session as Linux ENV vars
+          envs: DB_USERNAME,DB_PASSWORD,JWT_SECRET,AWS_ACCOUNT_ID,AWS_REGION,ECR_REPOSITORY
           script: |
-            # Login to ECR on EC2
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-            
             cd ~/tracksure-be
-            # Pull the latest image
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             
-            # Restart using the new image
+            # 1. Update the .env file so the App can read DB credentials
+            echo "DB_USERNAME=$DB_USERNAME" > .env
+            echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+            echo "JWT_SECRET=$JWT_SECRET" >> .env
+            
+            # 2. Login to ECR using the variables passed in via 'envs'
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            
+            # 3. Pull the latest image
+            docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+            
+            # 4. Restart the containers
             docker compose up -d --force-recreate
