@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgis/postgis:15-3.3 # Using PostGIS since your config uses Spatial Dialect
+    container_name: tracksure-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=tracksure
+      - POSTGRES_USER=${DB_USERNAME} # Use env var if set, otherwise default to 'myuser'
+      - POSTGRES_PASSWORD=${DB_PASSWORD} # Use env var if set, otherwise default to 'mypassword'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d tracksure"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+        - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    env_file: .env # This tells Docker to look at the .env file
+    environment:
+        - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/tracksure
+    container_name: tracksure-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      # Note: We use 'db' here because Docker maps the service name 'db' to its IP
+volumes:
+  postgres_data:
