@@ -17,6 +17,7 @@ services:
         - postgres_data:/var/lib/postgresql/data
 
   app:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/tracksure-be:latest
     build: .
     env_file: .env # This tells Docker to look at the .env file
     environment:
