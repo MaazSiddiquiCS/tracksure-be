@@ -53,15 +53,17 @@ jobs:
           script: |
             cd ~/tracksure-be
             
-            # 1. Login to ECR (Baking secrets directly into the command)
+            # 1. Login to ECR
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             
             # 2. Pull the latest image
             docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             
-            # 3. Create/Update the .env file for the DB
+            # 3. Create/Update the .env file for the DB AND the Image path
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" > .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> .env
+            echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
             
             # 4. Restart the containers
             docker compose up -d --force-recreate
