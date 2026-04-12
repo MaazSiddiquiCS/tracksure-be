@@ -59,7 +59,10 @@ public class SecurityConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
         http
+                // Enable CORS (uses CorsConfigurationSource bean)
+                .cors(cors -> {})
                 // CSRF disabled intentionally: this API uses stateless JWT Bearer-token
                 // authentication. CSRF attacks rely on the browser automatically sending
                 // session cookies; since no cookies are used here, CSRF protection is
