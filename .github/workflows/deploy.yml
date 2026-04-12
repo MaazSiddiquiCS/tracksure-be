@@ -50,21 +50,18 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # CRITICAL: This line "injects" the secrets into the SSH session
-          envs: AWS_ACCOUNT_ID,AWS_REGION,ECR_REPOSITORY,DB_USERNAME,DB_PASSWORD
           script: |
             cd ~/tracksure-be
             
-            # 1. Login to ECR
-            # Note: We use $VARIABLE (Linux style) because 'envs' passed them in
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+            # 1. Login to ECR (Baking secrets directly into the command)
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             
             # 2. Pull the latest image
-            docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             
-            # 3. Create a local .env file so docker-compose can use the DB credentials
-            echo "DB_USERNAME=$DB_USERNAME" > .env
-            echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+            # 3. Create/Update the .env file for the DB
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" > .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             
             # 4. Restart the containers
             docker compose up -d --force-recreate
