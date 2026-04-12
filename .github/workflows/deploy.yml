@@ -50,21 +50,21 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # These pass your GitHub Secrets into the SSH session as Linux ENV vars
-          envs: DB_USERNAME,DB_PASSWORD,JWT_SECRET,AWS_ACCOUNT_ID,AWS_REGION,ECR_REPOSITORY
+          # CRITICAL: This line "injects" the secrets into the SSH session
+          envs: AWS_ACCOUNT_ID,AWS_REGION,ECR_REPOSITORY,DB_USERNAME,DB_PASSWORD
           script: |
             cd ~/tracksure-be
             
-            # 1. Update the .env file so the App can read DB credentials
-            echo "DB_USERNAME=$DB_USERNAME" > .env
-            echo "DB_PASSWORD=$DB_PASSWORD" >> .env
-            echo "JWT_SECRET=$JWT_SECRET" >> .env
-            
-            # 2. Login to ECR using the variables passed in via 'envs'
+            # 1. Login to ECR
+            # Note: We use $VARIABLE (Linux style) because 'envs' passed them in
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
             
-            # 3. Pull the latest image
+            # 2. Pull the latest image
             docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+            
+            # 3. Create a local .env file so docker-compose can use the DB credentials
+            echo "DB_USERNAME=$DB_USERNAME" > .env
+            echo "DB_PASSWORD=$DB_PASSWORD" >> .env
             
             # 4. Restart the containers
             docker compose up -d --force-recreate
