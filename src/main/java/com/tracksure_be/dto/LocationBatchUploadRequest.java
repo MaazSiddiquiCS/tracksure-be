@@ -24,7 +24,7 @@ public class LocationBatchUploadRequest {
 	@NotBlank(message = "subjectPeerId must not be blank")
 	private String subjectPeerId;
 
-	/** Optional client echo of uploader device id; backend still derives uploader from auth principal. */
+	/** Optional uploader device id; if provided it must belong to the authenticated user, otherwise backend derives one. */
 	private Long uploaderDeviceId;
 
 	@NotNull(message = "points must not be null")

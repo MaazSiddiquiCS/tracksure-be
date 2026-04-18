@@ -52,8 +52,7 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 	@Override
 	@Transactional
 	public LocationBatchUploadResponse uploadBatch(LocationBatchUploadRequest request, Long authenticatedUserId) {
-		Device uploaderDevice = resolveAuthenticatedUploader(authenticatedUserId);
-		rejectSpoofedUploaderIfPresent(request, uploaderDevice);
+		Device uploaderDevice = resolveAuthenticatedUploader(authenticatedUserId, request.getUploaderDeviceId());
 		validateClientBatchUuid(request.getClientBatchUuid());
         String normalizedSubjectPeerId = normalizeSubjectPeerId(request.getSubjectPeerId());
 		int totalReceived = request.getPoints() != null ? request.getPoints().size() : 0;
@@ -237,23 +236,28 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 		}
 	}
 
-	private Device resolveAuthenticatedUploader(Long authenticatedUserId) {
+	private Device resolveAuthenticatedUploader(Long authenticatedUserId, Long requestUploaderDeviceId) {
 		if (authenticatedUserId == null) {
 			throw new IllegalArgumentException("Authenticated user id is required.");
+		}
+
+		if (requestUploaderDeviceId != null) {
+			Device requestedUploader = deviceRepository.findById(requestUploaderDeviceId)
+					.orElseThrow(() -> new IllegalArgumentException("uploaderDeviceId not found: " + requestUploaderDeviceId));
+			Long ownerUserId = requestedUploader.getOwnerUser() != null
+					? requestedUploader.getOwnerUser().getUserId()
+					: null;
+			if (ownerUserId == null || !ownerUserId.equals(authenticatedUserId)) {
+				throw new IllegalArgumentException(
+						"uploaderDeviceId spoof detected. uploaderDeviceId must belong to authenticated user.");
+			}
+			return requestedUploader;
 		}
 
 		return deviceRepository.findAllByOwnerUser_UserId(authenticatedUserId).stream()
 				.min(Comparator.comparing(Device::getDeviceId))
 				.orElseThrow(() -> new IllegalArgumentException(
 						"No device linked to authenticated user."));
-	}
-
-	private void rejectSpoofedUploaderIfPresent(LocationBatchUploadRequest request, Device authenticatedUploader) {
-		if (request.getUploaderDeviceId() != null
-				&& !request.getUploaderDeviceId().equals(authenticatedUploader.getDeviceId())) {
-			throw new IllegalArgumentException(
-					"uploaderDeviceId spoof detected. uploaderDeviceId is server-derived from authenticated principal.");
-		}
 	}
 
 	private String normalizeSubjectPeerId(String subjectPeerId) {
