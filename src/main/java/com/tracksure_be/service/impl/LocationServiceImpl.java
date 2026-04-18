@@ -3,7 +3,6 @@ package com.tracksure_be.service.impl;
 import com.tracksure_be.dto.LocationResponse;
 import com.tracksure_be.entity.Device;
 import com.tracksure_be.entity.Location;
-import com.tracksure_be.repository.DeviceLinkRepository;
 import com.tracksure_be.repository.DeviceRepository;
 import com.tracksure_be.repository.LocationRepository;
 import com.tracksure_be.service.LocationService;
@@ -20,7 +19,6 @@ public class LocationServiceImpl implements LocationService {
 
     private final LocationRepository locationRepository;
     private final DeviceRepository deviceRepository;
-    private final DeviceLinkRepository deviceLinkRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,16 +35,10 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LocationResponse> getByUserId(Long userId, Long requesterUserId) {
+    public List<LocationResponse> getByUserId(Long requesterUserId) {
         requireRequester(requesterUserId);
-        if (userId == null) {
-            throw new IllegalArgumentException("userId is required.");
-        }
-        if (!userId.equals(requesterUserId)) {
-            throw new IllegalArgumentException("Access denied: userId must match authenticated user.");
-        }
 
-        return locationRepository.findAllBySubjectDevice_OwnerUser_UserIdOrderByRecordedAtDesc(userId).stream()
+        return locationRepository.findAllBySubjectDevice_OwnerUser_UserIdOrderByRecordedAtDesc(requesterUserId).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -61,7 +53,8 @@ public class LocationServiceImpl implements LocationService {
                 location.getLocation() != null ? location.getLocation().getY() : null,
                 location.getLocation() != null ? location.getLocation().getX() : null,
                 location.getSubjectDevice() != null ? location.getSubjectDevice().getDeviceId() : null,
-                location.getUploaderDevice() != null ? location.getUploaderDevice().getDeviceId() : null
+                location.getUploaderDevice() != null ? location.getUploaderDevice().getDeviceId() : null,
+                location.getOwnerUser() != null ? location.getOwnerUser().getUserId() : null
         );
     }
 
@@ -75,13 +68,8 @@ public class LocationServiceImpl implements LocationService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Device not found for id: " + deviceId));
         Long ownerUserId = device.getOwnerUser() != null ? device.getOwnerUser().getUserId() : null;
-        if (ownerUserId != null && ownerUserId.equals(requesterUserId)) {
-            return;
-        }
-
-        boolean linked = deviceLinkRepository.existsByFollowerUser_UserIdAndTargetDevice_DeviceId(requesterUserId, deviceId);
-        if (!linked) {
-            throw new IllegalArgumentException("Access denied: device is not owned by or linked to authenticated user.");
+        if (ownerUserId == null || !ownerUserId.equals(requesterUserId)) {
+            throw new IllegalArgumentException("Access denied: device is not owned by authenticated user.");
         }
     }
 }

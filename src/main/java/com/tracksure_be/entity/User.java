@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -16,6 +17,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
@@ -50,4 +53,7 @@ public class User {
 
 	@OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
 	private com.tracksure_be.entity.Profile profile;
+
+	@OneToMany(mappedBy = "ownerUser", fetch = FetchType.LAZY)
+	private List<Device> devices = new ArrayList<>();
 }

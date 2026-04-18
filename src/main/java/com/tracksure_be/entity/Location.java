@@ -6,10 +6,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
@@ -18,6 +21,8 @@ import lombok.Setter;
 import org.locationtech.jts.geom.Point;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
@@ -36,10 +41,8 @@ import java.time.Instant;
 public class Location {
 
     @Id
-        @Column(name = "location_pk", nullable = false, updatable = false)
-        private Long locationPk;
-
-        @Column(name = "location_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "location_id", nullable = false, updatable = false)
     private Long locationId;
 
     @Column(name = "recorded_at", nullable = false)
@@ -55,11 +58,11 @@ public class Location {
     @Column(name = "source", nullable = false)
     private LocationSource source;
 
-        @Column(name = "updated_at", nullable = false)
-        private Instant updatedAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-        @Column(name = "last_location_log_id")
-        private Long lastLocationLogId;
+    @Column(name = "last_location_log_id")
+    private Long lastLocationLogId;
 
     @Column(name = "location", nullable = false, columnDefinition = "geometry(Point,4326)")
     private Point location;
@@ -68,11 +71,14 @@ public class Location {
     @JoinColumn(name = "subject_device_id", nullable = false)
     private Device subjectDevice;
 
-        @ManyToOne(fetch = FetchType.LAZY, optional = false)
-        @JoinColumn(name = "owner_user_id", nullable = false)
-        private User ownerUser;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_user_id", nullable = false)
+    private User ownerUser;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "uploader_device_id", nullable = false)
     private Device uploaderDevice;
+
+    @OneToMany(mappedBy = "projectionLocation", fetch = FetchType.LAZY)
+    private List<LocationLog> locationLogs = new ArrayList<>();
 }

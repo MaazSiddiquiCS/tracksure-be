@@ -39,14 +39,13 @@ public class LocationLogController {
 		return ResponseEntity.ok(locationLogService.getByDeviceId(deviceId, requesterUserId));
 	}
 
-	@GetMapping("/location-logs/user/{userId}")
-	@Operation(summary = "Get location logs for all devices owned by a user")
+	@GetMapping("/location-logs/me")
+	@Operation(summary = "Get location logs for all devices owned by authenticated user")
 	public ResponseEntity<List<LocationLogResponse>> getByUserId(
-			@PathVariable Long userId,
 			@AuthenticationPrincipal UserPrincipal principal
 	) {
 		Long requesterUserId = principal != null ? principal.getUserId() : null;
-		return ResponseEntity.ok(locationLogService.getByUserId(userId, requesterUserId));
+		return ResponseEntity.ok(locationLogService.getByUserId(requesterUserId));
 	}
 }
 
