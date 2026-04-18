@@ -180,22 +180,18 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 		}
 
 		Long subjectDeviceId = logEntry.getSubjectDevice().getDeviceId();
-		try {
-			locationRepository.upsertLatestProjection(
-					logEntry.getAccuracy(),
-					logEntry.getLocation().getX(),
-					logEntry.getLocation().getY(),
-					logEntry.getReceivedAt(),
-					logEntry.getRecordedAt(),
-					logEntry.getSource().name(),
-					Instant.now(),
-					logEntry.getSubjectDevice().getOwnerUser().getUserId(),
-					subjectDeviceId,
-					logEntry.getUploaderDevice().getDeviceId()
-			);
-		} catch (DataIntegrityViolationException e) {
-			log.warn("Projection upsert failed for subjectDeviceId={}", subjectDeviceId);
-		}
+		locationRepository.upsertLatestProjection(
+				logEntry.getAccuracy(),
+				logEntry.getLocation().getX(),
+				logEntry.getLocation().getY(),
+				logEntry.getReceivedAt(),
+				logEntry.getRecordedAt(),
+				logEntry.getSource().name(),
+				Instant.now(),
+				logEntry.getSubjectDevice().getOwnerUser().getUserId(),
+				subjectDeviceId,
+				logEntry.getUploaderDevice().getDeviceId()
+		);
 	}
 
 	private void attachProjectionLocation(List<LocationLog> insertedLogs) {
