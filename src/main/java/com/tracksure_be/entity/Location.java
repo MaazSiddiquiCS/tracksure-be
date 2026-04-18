@@ -61,9 +61,6 @@ public class Location {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(name = "last_location_log_id")
-    private Long lastLocationLogId;
-
     @Column(name = "location", nullable = false, columnDefinition = "geometry(Point,4326)")
     private Point location;
 

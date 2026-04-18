@@ -4,6 +4,7 @@ import com.tracksure_be.dto.LocationBatchUploadRequest;
 import com.tracksure_be.dto.LocationBatchUploadResponse;
 import com.tracksure_be.dto.LocationPointDto;
 import com.tracksure_be.entity.Device;
+import com.tracksure_be.entity.Location;
 import com.tracksure_be.entity.LocationLog;
 import com.tracksure_be.entity.UploadBatch;
 import com.tracksure_be.enums.LocationSource;
@@ -144,6 +145,7 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 		duplicates += raceDuplicates;
 
 		upsertLatestLocation(insertedLogs);
+		attachProjectionLocation(insertedLogs);
 
 		if (!saveUploadBatchSafely(request.getClientBatchUuid(), totalReceived, receivedAt, uploaderDevice)) {
 			return new LocationBatchUploadResponse(0, totalReceived, totalReceived);
@@ -172,7 +174,6 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 				|| logEntry.getUploaderDevice() == null
 				|| logEntry.getUploaderDevice().getDeviceId() == null
 				|| logEntry.getLocation() == null
-				|| logEntry.getLocationId() == null
 				|| logEntry.getRecordedAt() == null
 				|| logEntry.getReceivedAt() == null
 				|| logEntry.getSource() == null) {
@@ -180,7 +181,6 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 		}
 
 		Long subjectDeviceId = logEntry.getSubjectDevice().getDeviceId();
-		Long locationLogId = logEntry.getLocationId();
 		try {
 			locationRepository.upsertLatestProjection(
 					logEntry.getAccuracy(),
@@ -190,14 +190,31 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 					logEntry.getRecordedAt(),
 					logEntry.getSource().name(),
 					Instant.now(),
-					locationLogId,
 					logEntry.getSubjectDevice().getOwnerUser().getUserId(),
 					subjectDeviceId,
 					logEntry.getUploaderDevice().getDeviceId()
 			);
 		} catch (DataIntegrityViolationException e) {
-			log.warn("Projection upsert failed for subjectDeviceId={} locationLogId={}", subjectDeviceId, locationLogId);
+			log.warn("Projection upsert failed for subjectDeviceId={}", subjectDeviceId);
 		}
+	}
+
+	private void attachProjectionLocation(List<LocationLog> insertedLogs) {
+		if (insertedLogs.isEmpty()) {
+			return;
+		}
+
+		Location projectionLocation = locationRepository
+				.findBySubjectDevice_DeviceId(insertedLogs.get(0).getSubjectDevice().getDeviceId())
+				.orElse(null);
+		if (projectionLocation == null) {
+			return;
+		}
+
+		for (LocationLog insertedLog : insertedLogs) {
+			insertedLog.setProjectionLocation(projectionLocation);
+		}
+		locationLogRepository.saveAll(insertedLogs);
 	}
 
 	private boolean saveUploadBatchSafely(String clientBatchUuid, int pointsCount, Instant uploadedAt, Device uploaderDevice) {

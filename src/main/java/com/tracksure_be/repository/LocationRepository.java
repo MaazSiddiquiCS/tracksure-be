@@ -25,7 +25,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 recorded_at,
                 source,
                 updated_at,
-                last_location_log_id,
                 owner_user_id,
                 subject_device_id,
                 uploader_device_id
@@ -36,7 +35,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 :recordedAt,
                 :source,
                 :updatedAt,
-                :lastLocationLogId,
                 :ownerUserId,
                 :subjectDeviceId,
                 :uploaderDeviceId
@@ -48,7 +46,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 recorded_at = EXCLUDED.recorded_at,
                 source = EXCLUDED.source,
                 updated_at = EXCLUDED.updated_at,
-                last_location_log_id = EXCLUDED.last_location_log_id,
                 owner_user_id = EXCLUDED.owner_user_id,
                 uploader_device_id = EXCLUDED.uploader_device_id
             WHERE EXCLUDED.recorded_at > locations.recorded_at
@@ -62,7 +59,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             @Param("recordedAt") Instant recordedAt,
             @Param("source") String source,
             @Param("updatedAt") Instant updatedAt,
-            @Param("lastLocationLogId") Long lastLocationLogId,
             @Param("ownerUserId") Long ownerUserId,
             @Param("subjectDeviceId") Long subjectDeviceId,
             @Param("uploaderDeviceId") Long uploaderDeviceId
