@@ -7,7 +7,9 @@ spring:
   application:
     name: tracksure-be
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 4
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tracksure}
     username: ${DB_USERNAME}
@@ -21,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         # Crucial for PostGIS support

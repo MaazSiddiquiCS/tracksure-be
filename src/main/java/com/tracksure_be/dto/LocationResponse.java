@@ -20,4 +20,5 @@ public class LocationResponse {
     private Double longitude;
     private Long subjectDeviceId;
     private Long uploaderDeviceId;
+    private Long ownerUserId;
 }

@@ -183,7 +183,6 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 		Long locationLogId = logEntry.getLocationId();
 		try {
 			locationRepository.upsertLatestProjection(
-					locationLogId,
 					logEntry.getAccuracy(),
 					logEntry.getLocation().getX(),
 					logEntry.getLocation().getY(),
@@ -194,7 +193,6 @@ public class LocationBatchServiceImpl implements LocationBatchService {
 					locationLogId,
 					logEntry.getSubjectDevice().getOwnerUser().getUserId(),
 					subjectDeviceId,
-					locationLogId,
 					logEntry.getUploaderDevice().getDeviceId()
 			);
 		} catch (DataIntegrityViolationException e) {

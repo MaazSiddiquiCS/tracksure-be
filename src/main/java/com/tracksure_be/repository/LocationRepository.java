@@ -19,7 +19,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     @Modifying
     @Query(value = """
             INSERT INTO locations (
-                location_pk,
                 accuracy,
                 location,
                 received_at,
@@ -29,10 +28,8 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 last_location_log_id,
                 owner_user_id,
                 subject_device_id,
-                location_id,
                 uploader_device_id
             ) VALUES (
-                :locationPk,
                 :accuracy,
                 ST_SetSRID(ST_MakePoint(:lon, :lat), 4326),
                 :receivedAt,
@@ -42,7 +39,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 :lastLocationLogId,
                 :ownerUserId,
                 :subjectDeviceId,
-                :locationId,
                 :uploaderDeviceId
             )
             ON CONFLICT (subject_device_id) DO UPDATE SET
@@ -54,13 +50,11 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
                 updated_at = EXCLUDED.updated_at,
                 last_location_log_id = EXCLUDED.last_location_log_id,
                 owner_user_id = EXCLUDED.owner_user_id,
-                location_id = EXCLUDED.location_id,
                 uploader_device_id = EXCLUDED.uploader_device_id
             WHERE EXCLUDED.recorded_at > locations.recorded_at
                OR (EXCLUDED.recorded_at = locations.recorded_at AND EXCLUDED.received_at >= locations.received_at)
             """, nativeQuery = true)
     void upsertLatestProjection(
-            @Param("locationPk") Long locationPk,
             @Param("accuracy") Double accuracy,
             @Param("lon") double lon,
             @Param("lat") double lat,
@@ -71,7 +65,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
             @Param("lastLocationLogId") Long lastLocationLogId,
             @Param("ownerUserId") Long ownerUserId,
             @Param("subjectDeviceId") Long subjectDeviceId,
-            @Param("locationId") Long locationId,
             @Param("uploaderDeviceId") Long uploaderDeviceId
     );
 }

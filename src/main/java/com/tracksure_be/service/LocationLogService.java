@@ -9,6 +9,6 @@ public interface LocationLogService {
 
 	List<LocationLogResponse> getByDeviceId(Long deviceId, Long requesterUserId);
 
-	List<LocationLogResponse> getByUserId(Long userId, Long requesterUserId);
+	List<LocationLogResponse> getByUserId(Long requesterUserId);
 }
 

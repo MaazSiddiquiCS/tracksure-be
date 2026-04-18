@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/v1/location")
 @RequiredArgsConstructor
 @Tag(name = "Locations", description = "Latest location projections per device")
 public class LocationController {
 
     private final LocationService locationService;
 
-    @GetMapping("/locations/device/{deviceId}")
+    @GetMapping("/device/{deviceId}")
     @Operation(summary = "Get latest location by device id")
     public ResponseEntity<LocationResponse> getByDeviceId(
             @PathVariable Long deviceId,
@@ -35,13 +35,12 @@ public class LocationController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/locations/user/{userId}")
+    @GetMapping("/me")
     @Operation(summary = "Get latest locations for all devices owned by user")
     public ResponseEntity<List<LocationResponse>> getByUserId(
-            @PathVariable Long userId,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         Long requesterUserId = principal != null ? principal.getUserId() : null;
-        return ResponseEntity.ok(locationService.getByUserId(userId, requesterUserId));
+        return ResponseEntity.ok(locationService.getByUserId(requesterUserId));
     }
 }
