@@ -11,5 +11,7 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 	Optional<Profile> findByUser_UserId(Long userId);
 	Optional<Profile> findByPhoneNumber(String phoneNumber);
 	boolean existsByPhoneNumber(String phoneNumber);
+	boolean existsByUser_UserId(Long userId);
+	boolean existsByPhoneNumberAndUser_UserIdNot(String phoneNumber, Long userId);
 }
 
