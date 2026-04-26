@@ -7,7 +7,7 @@ spring:
   application:
     name: tracksure-be
   flyway:
-    enabled: false
+    enabled: true
     baseline-on-migrate: true
     baseline-version: 4
   datasource:
