@@ -224,4 +224,40 @@ public class GlobalExceptionHandler{
         );
         return new ResponseEntity<>(error, error.getStatus());
     }
+
+    @ExceptionHandler(StolenDeviceNotFoundException.class)
+    public ResponseEntity<ApiError> handleStolenDeviceNotFound(StolenDeviceNotFoundException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Stolen device not found"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+
+    @ExceptionHandler(DeviceAlreadyReportedException.class)
+    public ResponseEntity<ApiError> handleDeviceAlreadyReported(DeviceAlreadyReportedException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Device already reported as stolen"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
+
+    @ExceptionHandler(InvalidCoordinatesException.class)
+    public ResponseEntity<ApiError> handleInvalidCoordinates(InvalidCoordinatesException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getRequestURI(),
+                "Invalid coordinates provided"
+        );
+        return new ResponseEntity<>(error, error.getStatus());
+    }
 }
