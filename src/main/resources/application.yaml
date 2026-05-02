@@ -55,3 +55,7 @@ app:
     secret: ${JWT_SECRET:DEV_ONLY_CHANGE_ME_DEV_ONLY_CHANGE_ME_DEV_ONLY_CHANGE_ME}
     expiration-ms: 86400000        # 24 hours
     refresh-expiration-ms: 604800000  # 7 days
+  nominatim:
+    # Nominatim (OpenStreetMap) reverse geocoding API
+    api-url: ${NOMINATIM_API_URL:https://nominatim.openstreetmap.org}
+    timeout-ms: 5000
