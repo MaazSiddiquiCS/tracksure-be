@@ -3,7 +3,9 @@ package com.tracksure_be.service.impl;
 import com.tracksure_be.dto.LocationResponse;
 import com.tracksure_be.entity.Device;
 import com.tracksure_be.entity.Location;
+import com.tracksure_be.enums.PermissionType;
 import com.tracksure_be.repository.DeviceRepository;
+import com.tracksure_be.repository.DeviceLinkRepository;
 import com.tracksure_be.repository.LocationRepository;
 import com.tracksure_be.service.LocationService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ public class LocationServiceImpl implements LocationService {
 
     private final LocationRepository locationRepository;
     private final DeviceRepository deviceRepository;
+    private final DeviceLinkRepository deviceLinkRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,8 +71,18 @@ public class LocationServiceImpl implements LocationService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("Device not found for id: " + deviceId));
         Long ownerUserId = device.getOwnerUser() != null ? device.getOwnerUser().getUserId() : null;
-        if (ownerUserId == null || !ownerUserId.equals(requesterUserId)) {
-            throw new IllegalArgumentException("Access denied: device is not owned by authenticated user.");
+        if (ownerUserId != null && ownerUserId.equals(requesterUserId)) {
+            return;
+        }
+
+        boolean linked = deviceLinkRepository
+                .findByFollowerUser_UserIdAndTargetDevice_DeviceId(requesterUserId, deviceId)
+                .map(link -> link.getPermissionType() == PermissionType.TRACK
+                        || link.getPermissionType() == PermissionType.TRACK)
+                .orElse(false);
+
+        if (!linked) {
+            throw new IllegalArgumentException("Access denied: device is not shared with authenticated user.");
         }
     }
 }
