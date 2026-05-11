@@ -18,7 +18,7 @@ public interface StolenDeviceRepository extends JpaRepository<StolenDevice, Long
     /**
      * Find stolen device by device ID
      */
-        Optional<StolenDevice> findByDeviceId(Long deviceId);
+        Optional<StolenDevice> findTopByDeviceIdOrderByTimestampDesc(Long deviceId);
 
     /**
      * Find all stolen devices for a specific user with pagination
@@ -179,5 +179,7 @@ public interface StolenDeviceRepository extends JpaRepository<StolenDevice, Long
             """)
     Page<java.util.Map<String, Object>> getCityDistribution(Pageable pageable);
 
-    boolean existsByDeviceIdAndIsRecoveredFalse(Long deviceId);Optional<StolenDevice> findTopByDeviceIdAndIsRecoveredFalseOrderByTimestampDesc(Long deviceId);
+        boolean existsByDeviceIdAndIsRecoveredFalse(Long deviceId);
+
+        Optional<StolenDevice> findTopByDeviceIdAndIsRecoveredFalseOrderByTimestampDesc(Long deviceId);
 }

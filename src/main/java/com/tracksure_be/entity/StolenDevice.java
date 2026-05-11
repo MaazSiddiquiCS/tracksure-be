@@ -23,9 +23,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "stolen_devices",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_stolen_devices_device_id", columnNames = "device_id")
-        },
         indexes = {
                 @Index(name = "idx_stolen_devices_device_id", columnList = "device_id"),
                 @Index(name = "idx_stolen_devices_user_id", columnList = "user_id"),
@@ -46,7 +43,7 @@ public class StolenDevice {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "device_id", nullable = false, unique = true)
+    @Column(name = "device_id", nullable = false, unique = false)
     private Long deviceId;
 
     @Column(name = "user_id", nullable = false)

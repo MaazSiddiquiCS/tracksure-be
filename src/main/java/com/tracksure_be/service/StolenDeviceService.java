@@ -107,7 +107,7 @@ public class StolenDeviceService {
      */
     @Transactional(readOnly = true)
     public StolenDeviceResponse getDeviceDetails(Long deviceId, Long userId) {
-        StolenDevice device = stolenDeviceRepository.findByDeviceId(deviceId)
+        StolenDevice device = stolenDeviceRepository.findTopByDeviceIdOrderByTimestampDesc(deviceId)
                 .orElseThrow(() -> new StolenDeviceNotFoundException("Stolen device with ID " + deviceId + " not found"));
 
         // Ensure user can only access their own devices
@@ -123,7 +123,7 @@ public class StolenDeviceService {
      */
     @Transactional
     public StolenDeviceResponse recoverDevice(Long deviceId, Long userId) throws AccessDeniedException {
-        StolenDevice device = stolenDeviceRepository.findByDeviceId(deviceId)
+        StolenDevice device = stolenDeviceRepository.findTopByDeviceIdAndIsRecoveredFalseOrderByTimestampDesc(deviceId)
                 .orElseThrow(() -> new StolenDeviceNotFoundException(
                         "Stolen device with ID " + deviceId + " not found"
                 ));
@@ -170,7 +170,7 @@ public class StolenDeviceService {
     @Transactional(readOnly = true)
     public List<DeviceMovementPointDto> getDeviceMovementPath(Long deviceId, Long userId) {
         // Verify device belongs to user
-        StolenDevice device = stolenDeviceRepository.findByDeviceId(deviceId)
+        StolenDevice device = stolenDeviceRepository.findTopByDeviceIdOrderByTimestampDesc(deviceId)
                 .orElseThrow(() -> new StolenDeviceNotFoundException("Stolen device with ID " + deviceId + " not found"));
 
         if (!device.getUserId().equals(userId)) {
@@ -244,7 +244,7 @@ public class StolenDeviceService {
      */
     @Transactional(readOnly = true)
     public TheftReportDto generatePoliceReport(Long deviceId, Long userId) {
-        StolenDevice device = stolenDeviceRepository.findByDeviceId(deviceId)
+        StolenDevice device = stolenDeviceRepository.findTopByDeviceIdOrderByTimestampDesc(deviceId)
                 .orElseThrow(() -> new StolenDeviceNotFoundException("Stolen device with ID " + deviceId + " not found"));
 
         if (!device.getUserId().equals(userId)) {
