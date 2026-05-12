@@ -8,11 +8,13 @@ import com.tracksure_be.dto.ReportStolenDeviceRequest;
 import com.tracksure_be.dto.SafetyScoreDto;
 import com.tracksure_be.dto.StolenDeviceResponse;
 import com.tracksure_be.dto.TheftReportDto;
+import com.tracksure_be.entity.Device;
 import com.tracksure_be.entity.StolenDevice;
 import com.tracksure_be.entity.User;
 import com.tracksure_be.exception.DeviceAlreadyReportedException;
 import com.tracksure_be.exception.InvalidCoordinatesException;
 import com.tracksure_be.exception.StolenDeviceNotFoundException;
+import com.tracksure_be.repository.DeviceRepository;
 import com.tracksure_be.repository.StolenDeviceRepository;
 import com.tracksure_be.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ import java.util.stream.Collectors;
 public class StolenDeviceService {
 
     private final StolenDeviceRepository stolenDeviceRepository;
+    private final DeviceRepository deviceRepository;
     private final UserRepository userRepository;
     private final GeocodingService geocodingService;
 
@@ -281,9 +284,11 @@ public class StolenDeviceService {
      * Helper method to map StolenDevice to StolenDeviceResponse DTO
      */
     private StolenDeviceResponse mapToResponse(StolenDevice device) {
+        String deviceName = resolveDeviceName(device.getDeviceId());
         return StolenDeviceResponse.builder()
                 .id(device.getId())
                 .deviceId(device.getDeviceId())
+            .deviceName(deviceName)
                 .latitude(device.getLatitude())
                 .longitude(device.getLongitude())
                 .formattedAddress(device.getFormattedAddress())
@@ -294,6 +299,15 @@ public class StolenDeviceService {
                 .createdAt(device.getCreatedAt())
                 .updatedAt(device.getUpdatedAt())
                 .build();
+    }
+
+    private String resolveDeviceName(Long deviceId) {
+        if (deviceId == null) {
+            return null;
+        }
+        return deviceRepository.findById(deviceId)
+                .map(Device::getDeviceName)
+                .orElse(null);
     }
 
     /**
