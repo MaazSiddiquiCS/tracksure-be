@@ -19,6 +19,7 @@ public class StolenDeviceResponse {
 
     private Long id;
     private Long deviceId;
+    private String deviceName;
     private Double latitude;
     private Double longitude;
     private String formattedAddress;
