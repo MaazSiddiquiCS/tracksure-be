@@ -2,6 +2,7 @@ package com.tracksure_be.controller;
 
 import com.tracksure_be.dto.ReportStolenDeviceRequest;
 import com.tracksure_be.dto.StolenDeviceResponse;
+import com.tracksure_be.dto.UserStolenReportsDto;
 import com.tracksure_be.security.UserPrincipal;
 import com.tracksure_be.service.StolenDeviceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -114,5 +116,18 @@ public class StolenDeviceController {
                 principal.getUserId()
         );
         return ResponseEntity.ok(device);
+    }
+
+    /**
+     * Get all stolen reports grouped by user (admin only)
+     * GET /api/stolen/admin/reports-by-user
+     */
+    @GetMapping("/admin/reports-by-user")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[ADMIN] Get all stolen reports grouped by user",
+            description = "Retrieve paginated stolen device reports grouped by user (admin only)")
+    public ResponseEntity<Page<UserStolenReportsDto>> getAllReportsGroupedByUser(Pageable pageable) {
+        Page<UserStolenReportsDto> reports = stolenDeviceService.getAllStolenReportsGroupedByUser(pageable);
+        return ResponseEntity.ok(reports);
     }
 }

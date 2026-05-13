@@ -1,6 +1,8 @@
 package com.tracksure_be.repository;
 
 import com.tracksure_be.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	boolean existsByUsername(String username);
 	List<User> findAllByOrderByUsernameAsc();
 	List<User> findAllByUsernameContainingIgnoreCaseOrderByUsernameAsc(String username);
+
+    Page<User> findAllByUsernameContainingIgnoreCase(String trim, Pageable pageable);
 }
 

@@ -5,6 +5,7 @@ import com.tracksure_be.dto.LoginResponse;
 import com.tracksure_be.dto.SignupRequest;
 import com.tracksure_be.entity.RefreshToken;
 import com.tracksure_be.entity.User;
+import com.tracksure_be.enums.Role;
 import com.tracksure_be.exception.EmailAlreadyExistsException;
 import com.tracksure_be.exception.InvalidTokenException;
 import com.tracksure_be.exception.UsernameAlreadyExistsException;
@@ -68,6 +69,7 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.CUSTOMER);
         user.setCreatedAt(Instant.now());
 
         user = userRepository.save(user);
@@ -155,11 +157,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResponse buildResponse(String accessToken, String refreshToken, UserPrincipal principal) {
+        User user= userRepository.findById(principal.getUserId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "User not found for ID: " + principal.getUserId()));
         return new LoginResponse(
                 accessToken,
                 refreshToken,
                 principal.getUserId(),
                 principal.getUsername(),
-                principal.getEmail());
+                principal.getEmail(),
+                user.getRole());
     }
 }

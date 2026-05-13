@@ -3,6 +3,7 @@ package com.tracksure_be.service.impl;
 import com.tracksure_be.dto.UserRequest;
 import com.tracksure_be.dto.UserResponse;
 import com.tracksure_be.entity.User;
+import com.tracksure_be.enums.Role;
 import com.tracksure_be.exception.EmailAlreadyExistsException;
 import com.tracksure_be.exception.UserNotFoundException;
 import com.tracksure_be.exception.UsernameAlreadyExistsException;
@@ -10,6 +11,8 @@ import com.tracksure_be.mapper.UserMapper;
 import com.tracksure_be.repository.UserRepository;
 import com.tracksure_be.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,18 @@ public class UserServiceImpl implements UserService {
             users = userRepository.findAllByOrderByUsernameAsc();
         }
         return users.stream().map(userMapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getAllUsersPaginated(String username, Pageable pageable) {
+        Page<User> users;
+        if (username != null && !username.isBlank()) {
+            users = userRepository.findAllByUsernameContainingIgnoreCase(username.trim(), pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+        return users.map(userMapper::toResponse);
     }
 
     @Override
@@ -83,5 +98,14 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(userId);
         }
         userRepository.deleteById(userId);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse changeRole(Long userId, Role newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        user.setRole(newRole);
+        return userMapper.toResponse(userRepository.save(user));
     }
 }

@@ -1,18 +1,19 @@
 package com.tracksure_be.dto;
 
 import com.tracksure_be.enums.Role;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.Instant;
 
+/**
+ * Request DTO for changing a user's role.
+ */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
-    private Long userId;
-    private String username;
-    private String email;
-    private Instant createdAt;
+@AllArgsConstructor
+public class ChangeUserRoleRequest {
+    
+    @NotNull(message = "Role is required")
     private Role role;
 }
