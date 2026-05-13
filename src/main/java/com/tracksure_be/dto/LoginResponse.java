@@ -1,5 +1,6 @@
 package com.tracksure_be.dto;
 
+import com.tracksure_be.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,5 +14,6 @@ public class LoginResponse {
     private Long userId;
     private String username;
     private String email;
+    private Role role;
 }
 

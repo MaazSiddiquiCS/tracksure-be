@@ -1,6 +1,7 @@
 package com.tracksure_be.security;
 
 import com.tracksure_be.entity.User;
+import com.tracksure_be.enums.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,6 +13,7 @@ import java.util.List;
 /**
  * Spring Security UserDetails wrapper around the {@link User} entity.
  * Keeps the entity decoupled from the security layer.
+ * Loads the role from the User entity and returns it as a GrantedAuthority.
  */
 public class UserPrincipal implements UserDetails {
 
@@ -21,12 +23,15 @@ public class UserPrincipal implements UserDetails {
     private final String password;
     @Getter
     private final String email;
+    @Getter
+    private final Role role;
 
     private UserPrincipal(User user) {
         this.userId = user.getUserId();
         this.username = user.getUsername();
         this.password = user.getPasswordHash();
         this.email = user.getEmail();
+        this.role = user.getRole() != null ? user.getRole() : Role.CUSTOMER;
     }
 
     public static UserPrincipal of(User user) {
@@ -35,7 +40,8 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        String authority = "ROLE_" + role.name();
+        return List.of(new SimpleGrantedAuthority(authority));
     }
 
     @Override
@@ -68,3 +74,4 @@ public class UserPrincipal implements UserDetails {
         return true;
     }
 }
+

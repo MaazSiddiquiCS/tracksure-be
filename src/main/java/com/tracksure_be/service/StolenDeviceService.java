@@ -8,6 +8,7 @@ import com.tracksure_be.dto.ReportStolenDeviceRequest;
 import com.tracksure_be.dto.SafetyScoreDto;
 import com.tracksure_be.dto.StolenDeviceResponse;
 import com.tracksure_be.dto.TheftReportDto;
+import com.tracksure_be.dto.UserStolenReportsDto;
 import com.tracksure_be.entity.Device;
 import com.tracksure_be.entity.StolenDevice;
 import com.tracksure_be.entity.User;
@@ -280,6 +281,36 @@ public class StolenDeviceService {
         return report;
     }
 
+    /**
+     * Get all stolen reports grouped by user (admin only)
+     */
+    @Transactional(readOnly = true)
+    public Page<UserStolenReportsDto> getAllStolenReportsGroupedByUser(Pageable pageable) {
+
+        Page<User> usersPage = userRepository.findAll(pageable);
+
+        return usersPage.map(user -> {
+
+            Page<StolenDevice> userReportsPage =
+                    stolenDeviceRepository.findAllByUserIdOrderByTimestampDesc(
+                            user.getUserId(),
+                            Pageable.unpaged()
+                    );
+
+            List<StolenDeviceResponse> reportResponses =
+                    userReportsPage.getContent()
+                            .stream()
+                            .map(this::mapToResponse)
+                            .toList();
+
+            return UserStolenReportsDto.builder()
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .stolenReports(reportResponses)
+                    .build();
+        });
+    }
     /**
      * Helper method to map StolenDevice to StolenDeviceResponse DTO
      */
